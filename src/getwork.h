@@ -10,8 +10,8 @@
 namespace NextMiner {
     class GetWork {
         public:
-            GetWork();
-            ~GetWork();
+            GetWork() {};
+            virtual ~GetWork() {};
 
             class Work {
                 public:

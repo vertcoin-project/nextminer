@@ -2,11 +2,11 @@
 #define STRATUMCLIENT_H_INCLUDED
 
 #include <string>
+#include <thread>
 
-#include <jsonrpccpp/client/connectors/tcpsocketclient.h>
+#include <SFML/Network/TcpSocket.hpp>
 
 #include "getwork.h"
-#include "stratumrpc.h"
 
 namespace NextMiner {
     class StratumClient : public GetWork {
@@ -39,8 +39,22 @@ namespace NextMiner {
             virtual void suggestTarget(const uint32_t target);
 
         private:
-            std::unique_ptr<StratumRPCClient> client;
-            std::unique_ptr<jsonrpc::TcpSocketClient> socket;
+            sf::TcpSocket socket;
+
+            bool authorize(const std::string& username,
+                           const std::string& password);
+
+            Json::Value request(const std::string& method,
+                                const Json::Value& params);
+
+            uint64_t reqId;
+            std::map<uint64_t, Json::Value> responses;
+
+            std::unique_ptr<std::thread> responseThread;
+
+            void responseFunction();
+
+            bool running;
     };
 }
 

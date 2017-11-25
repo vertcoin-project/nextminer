@@ -11,6 +11,19 @@ namespace NextMiner {
                            = jsonrpc::JSONRPC_CLIENT_V2) :
                            jsonrpc::Client(conn, type) {}
 
+            Json::Value authorize(const std::string& username,
+                                  const std::string& password)
+                                  throw (jsonrpc::JsonRpcException) {
+                Json::Value params;
+                params.append(username);
+                params.append(password);
+
+                const Json::Value result = this->CallMethod("authorize",
+                                                            params);
+
+                if(result.)
+            }
+
             /*Json::Value getrawtransaction(const std::string& id, const bool verbose)
             throw (jsonrpc::JsonRpcException) {
                 Json::Value p;

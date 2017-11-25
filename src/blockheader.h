@@ -3,7 +3,7 @@
 
 #include <array>
 
-#include <jsoncpp/json/value.h>
+#include <json/json.h>
 
 namespace NextMiner {
     class BlockHeader {
