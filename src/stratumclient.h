@@ -3,6 +3,7 @@
 
 #include <string>
 #include <thread>
+#include <mutex>
 
 #include <SFML/Network/TcpSocket.hpp>
 
@@ -40,6 +41,7 @@ namespace NextMiner {
 
         private:
             sf::TcpSocket socket;
+            std::mutex socketLock;
 
             bool authorize(const std::string& username,
                            const std::string& password);
@@ -49,6 +51,7 @@ namespace NextMiner {
 
             uint64_t reqId;
             std::map<uint64_t, Json::Value> responses;
+            std::mutex responsesLock;
 
             std::unique_ptr<std::thread> responseThread;
 

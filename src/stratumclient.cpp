@@ -14,6 +14,8 @@ NextMiner::StratumClient::StratumClient(const std::string& host,
         throw std::runtime_error("Failed to connect to stratum server");
     }
 
+    socket.setBlocking(false);
+
     running = true;
 
     responseThread.reset(new std::thread(&NextMiner::StratumClient::responseFunction, this));
@@ -48,7 +50,9 @@ void NextMiner::StratumClient::responseFunction() {
     while(running) {
         std::string buffer(1024, '\0');
         size_t received;
+        socketLock.lock();
         if(socket.receive(&buffer[0], buffer.capacity(), received) == sf::Socket::Status::Done) {
+            socketLock.unlock();
             buffer.resize(received);
 
             std::stringstream ss(buffer);
@@ -69,7 +73,9 @@ void NextMiner::StratumClient::responseFunction() {
                 if(res.isObject()) {
                     // Is it a response or a request?
                     if(res.isMember("result")) {
+                        responsesLock.lock();
                         responses.insert(std::make_pair(res["id"].asUInt64(), res));
+                        responsesLock.unlock();
                     } else if(res.isMember("method")) {
                         const std::string method = res["method"].asString();
 
@@ -90,6 +96,7 @@ void NextMiner::StratumClient::responseFunction() {
                 }
             }
         } else {
+            socketLock.unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
@@ -122,22 +129,31 @@ Json::Value NextMiner::StratumClient::request(const std::string& method,
 
     const std::string rawReq = Json::writeString(builder, req) + "\n";
 
+    socketLock.lock();
     socket.send(rawReq.c_str(), rawReq.size());
+    socketLock.unlock();
 
     unsigned int attempts = 0;
+
+    responsesLock.lock();
     auto it = responses.find(ourId);
     while(it == responses.end()) {
+        responsesLock.unlock();
+
         attempts++;
         if(attempts > 50) {
             throw std::runtime_error("Lost connection with stratum server");
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+        responsesLock.lock();
         it = responses.find(ourId);
     }
 
     const Json::Value response = it->second;
 
     responses.erase(ourId);
+    responsesLock.unlock();
 
     return response;
 }
