@@ -17,6 +17,10 @@ NextMiner::StratumClient::StratumClient(const std::string& host,
     running = true;
 
     responseThread.reset(new std::thread(&NextMiner::StratumClient::responseFunction, this));
+
+    if(!authorize(username, password)) {
+        throw std::runtime_error("Failed to authorize with stratum server");
+    }
 }
 
 NextMiner::StratumClient::~StratumClient() {
@@ -50,26 +54,38 @@ void NextMiner::StratumClient::responseFunction() {
             std::stringstream ss(buffer);
             std::string line;
             while(std::getline(ss, line, '\n')) {
-                const Json::Value res(line);
+                Json::CharReaderBuilder rbuilder;
+                rbuilder["collectComments"] = false;
+                std::string errs;
+                std::stringstream input(line);
 
-                // Is it a response or a request?
-                if(res["method"].empty()) {
-                    responses.insert(std::make_pair(res["id"].asUInt64(), res));
-                } else {
-                    const std::string method = res["method"].asString();
+                Json::Value res;
+                try {
+                    Json::parseFromStream(rbuilder, input, &res, &errs);
+                } catch(const Json::Exception& e) {
+                    res = Json::nullValue;
+                }
 
-                    if(method == "client.get_version") {
-                        // TODO
-                    } else if(method == "client.reconnect") {
-                        // TODO
-                    } else if(method == "client.show_message") {
-                        // TODO
-                    } else if(method == "mining.notify") {
-                        // TODO
-                    } else if(method == "mining.set_difficulty") {
-                        // TODO
-                    } else if(method == "mining.set_extranonce") {
-                        // TODO
+                if(res.isObject()) {
+                    // Is it a response or a request?
+                    if(res.isMember("result")) {
+                        responses.insert(std::make_pair(res["id"].asUInt64(), res));
+                    } else if(res.isMember("method")) {
+                        const std::string method = res["method"].asString();
+
+                        if(method == "client.get_version") {
+                            // TODO
+                        } else if(method == "client.reconnect") {
+                            // TODO
+                        } else if(method == "client.show_message") {
+                            // TODO
+                        } else if(method == "mining.notify") {
+                            // TODO
+                        } else if(method == "mining.set_difficulty") {
+                            // TODO
+                        } else if(method == "mining.set_extranonce") {
+                            // TODO
+                        }
                     }
                 }
             }
