@@ -45,7 +45,17 @@ std::tuple<bool, std::string> NextMiner::StratumClient::submitWork(const NextMin
 }
 
 void NextMiner::StratumClient::suggestTarget(const uint32_t target) {
-    // TODO
+    std::stringstream ss;
+
+    ss << std::hex << target;
+
+    Json::Value req;
+    req["id"] = reqId++;
+    req["method"] = "mining.suggest_target";
+    req["jsonrpc"] = "2.0";
+    req["params"] = ss.str();
+
+    sendJson(req);
 }
 
 void NextMiner::StratumClient::responseFunction() {
