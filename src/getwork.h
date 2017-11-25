@@ -15,8 +15,8 @@ namespace NextMiner {
 
             class Work {
                 public:
-                    Work();
-                    ~Work();
+                    Work() {};
+                    virtual ~Work() {};
 
                     virtual std::array<uint8_t, 80> getBytes() = 0;
 

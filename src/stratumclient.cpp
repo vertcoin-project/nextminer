@@ -32,12 +32,64 @@ NextMiner::StratumClient::~StratumClient() {
     responseThread->join();
 }
 
+NextMiner::StratumClient::StratumJob::StratumJob() {
+
+}
+
+NextMiner::StratumClient::StratumJob::~StratumJob() {
+
+}
+
+NextMiner::StratumClient::StratumJob::StratumJob(const Json::Value& notifyPayload,
+                                                 const uint32_t target) {
+    jobId = notifyPayload[0].asString();
+    prevHash = notifyPayload[1].asString();
+    coinb1 = notifyPayload[2].asString();
+    coinb2 = notifyPayload[3].asString();
+    for(int i = notifyPayload[4].size(); i >= 0; i--) {
+        merkleHashes.push_back(notifyPayload[4][i].asString());
+    }
+    version = notifyPayload[5].asUInt();
+    nbits = notifyPayload[6].asUInt();
+    ntime = notifyPayload[7].asUInt();
+
+    this->target = target;
+}
+
+void NextMiner::StratumClient::StratumJob::operator=(const StratumJob& other) {
+    jobId = other.jobId;
+    prevHash = other.prevHash;
+    coinb1 = other.coinb1;
+    coinb2 = other.coinb2;
+    merkleHashes = other.merkleHashes;
+    version = other.version;
+    nbits = other.nbits;
+    ntime = other.ntime;
+    nonce = other.nonce;
+    target = other.target;
+}
+
+void NextMiner::StratumClient::StratumJob::setNonce(const uint32_t nonce) {
+    this->nonce = nonce;
+}
+
+uint32_t NextMiner::StratumClient::StratumJob::getTarget() {
+    return target;
+}
+
+std::array<uint8_t, 80> NextMiner::StratumClient::StratumJob::getBytes() {
+    // TODO
+}
+
 void NextMiner::StratumClient::registerWorker(std::function<void(const NextMiner::GetWork::Work&)> cb) {
     // TODO
 }
 
 std::unique_ptr<NextMiner::GetWork::Work> NextMiner::StratumClient::getWork() {
-    // TODO
+    StratumJob* job = new StratumJob;
+    *job = *currentJob;
+
+    return std::unique_ptr<GetWork::Work>(job);
 }
 
 std::tuple<bool, std::string> NextMiner::StratumClient::submitWork(const NextMiner::GetWork::Work& work) {
