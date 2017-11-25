@@ -49,6 +49,7 @@
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/stratumclient.cpp" />
 		<Unit filename="src/stratumclient.h" />
+		<Unit filename="src/version.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

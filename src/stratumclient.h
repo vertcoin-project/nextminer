@@ -57,6 +57,12 @@ namespace NextMiner {
 
             void responseFunction();
 
+            void sendResponse(const Json::Value& result,
+                              const uint64_t id,
+                              const Json::Value& error = Json::nullValue);
+
+            void sendJson(const Json::Value& payload);
+
             bool running;
     };
 }

@@ -1,8 +1,10 @@
 #include <sstream>
+#include <iostream>
 
 #include <SFML/Network/IpAddress.hpp>
 
 #include "stratumclient.h"
+#include "version.h"
 
 NextMiner::StratumClient::StratumClient(const std::string& host,
                                         const unsigned int port,
@@ -48,7 +50,7 @@ void NextMiner::StratumClient::suggestTarget(const uint32_t target) {
 
 void NextMiner::StratumClient::responseFunction() {
     while(running) {
-        std::string buffer(1024, '\0');
+        std::string buffer(102400, '\0');
         size_t received;
         socketLock.lock();
         if(socket.receive(&buffer[0], buffer.capacity(), received) == sf::Socket::Status::Done) {
@@ -78,19 +80,25 @@ void NextMiner::StratumClient::responseFunction() {
                         responsesLock.unlock();
                     } else if(res.isMember("method")) {
                         const std::string method = res["method"].asString();
+                        const uint64_t id = res["id"].asUInt64();
 
                         if(method == "client.get_version") {
-                            // TODO
+                            sendResponse(version, id);
                         } else if(method == "client.reconnect") {
                             // TODO
+                            std::cout << "Got reconnect!" << std::endl;
                         } else if(method == "client.show_message") {
                             // TODO
+                            std::cout << "Got show_message!" << std::endl;
                         } else if(method == "mining.notify") {
                             // TODO
+                            std::cout << "Got notify!" << std::endl;
                         } else if(method == "mining.set_difficulty") {
                             // TODO
+                            std::cout << "Got set_difficulty!" << std::endl;
                         } else if(method == "mining.set_extranonce") {
                             // TODO
+                            std::cout << "Got set_extranonce!" << std::endl;
                         }
                     }
                 }
@@ -100,6 +108,33 @@ void NextMiner::StratumClient::responseFunction() {
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
+}
+
+void NextMiner::StratumClient::sendResponse(const Json::Value& result,
+                                            const uint64_t id,
+                                            const Json::Value& error) {
+    Json::Value res;
+
+    res["id"] = id;
+    res["jsonrpc"] = "2.0";
+    res["result"] = result;
+    res["error"] = error;
+
+    sendJson(res);
+}
+
+void NextMiner::StratumClient::sendJson(const Json::Value& payload) {
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    builder["indentation"] = "";
+
+    const std::string rawReq = Json::writeString(builder, payload) + "\n";
+
+    socketLock.lock();
+    socket.setBlocking(true);
+    socket.send(rawReq.c_str(), rawReq.size());
+    socket.setBlocking(false);
+    socketLock.unlock();
 }
 
 bool NextMiner::StratumClient::authorize(const std::string& username,
@@ -123,15 +158,7 @@ Json::Value NextMiner::StratumClient::request(const std::string& method,
     req["params"] = params;
     req["method"] = method;
 
-    Json::StreamWriterBuilder builder;
-    builder["commentStyle"] = "None";
-    builder["indentation"] = "";
-
-    const std::string rawReq = Json::writeString(builder, req) + "\n";
-
-    socketLock.lock();
-    socket.send(rawReq.c_str(), rawReq.size());
-    socketLock.unlock();
+    sendJson(req);
 
     unsigned int attempts = 0;
 
