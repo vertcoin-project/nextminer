@@ -6,6 +6,6 @@ int main() {
         new NextMiner::StratumClient("18.250.0.71", 9171, "jamesl22", "x", log.get()));
 
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(150000));
     return 0;
 }

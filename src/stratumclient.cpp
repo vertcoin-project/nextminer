@@ -244,7 +244,7 @@ void NextMiner::StratumClient::responseFunction() {
                                 }
                                 callbacksLock.unlock();
 
-                                log->printf("Stratum: mining.notify",
+                                log->printf("Stratum: mining.notify " + BytesToHex(newWork->getBytes()),
                                 Log::Severity::Notice);
                             }).detach();
                         } else if(method == "mining.set_difficulty") {

@@ -5,6 +5,7 @@
 #include <string>
 #include <array>
 #include <algorithm>
+#include <iostream>
 
 #include "sha256.h"
 #include "bignum.hpp"
@@ -27,19 +28,28 @@ std::string BytesToHex(const std::vector<uint8_t>& bytes) {
 
     ss << std::hex << std::setfill('0');
     for(const auto v : bytes) {
-        ss << std::setw(2) << v;
+        ss << std::setw(2) << static_cast<int>(v);
     }
 
     return ss.str();
 }
 
-template <class T>
-T EndSwap(T& objp) {
-    unsigned char* memp = reinterpret_cast<unsigned char*>(&objp);
-    T returning;
-    std::reverse_copy(memp, memp + sizeof(T), &returning);
+template <typename T>
+T EndSwap(T u){
+    static_assert(CHAR_BIT == 8, "CHAR_BIT != 8");
 
-    return returning;
+    union {
+        T u;
+        unsigned char u8[sizeof(T)];
+    } source, dest;
+
+    source.u = u;
+
+    for(size_t k = 0; k < sizeof(T); k++) {
+        dest.u8[k] = source.u8[sizeof(T) - k - 1];
+    }
+
+    return dest.u;
 }
 
 std::vector<uint8_t> ReverseBytes(const std::vector<uint8_t>& data) {
