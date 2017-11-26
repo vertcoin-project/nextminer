@@ -30,11 +30,31 @@ NextMiner::StratumClient::StratumClient(const std::string& host,
     if(!authorize(username, password)) {
         log->printf("Failed to authorize with stratum server", Log::Severity::Error);
     }
+
+    subscribe();
 }
 
 NextMiner::StratumClient::~StratumClient() {
     running = false;
     responseThread->join();
+}
+
+void NextMiner::StratumClient::subscribe() {
+    std::thread([this]{
+        Json::Value params;
+        params.append(version);
+        const Json::Value res = request("mining.subscribe", params);
+        currentParams.extranonce1 = res["result"][1].asString();
+        currentParams.extranonce2Size = res["result"][2].asUInt();
+
+        Json::Value req;
+        req["id"] = reqId++;
+        req["jsonrpc"] = "2.0";
+        req["params"] = Json::nullValue;
+        req["method"] = "mining.extranonce.subscribe";
+
+        sendJson(req);
+    }).detach();
 }
 
 NextMiner::StratumClient::StratumJob::StratumJob() {
@@ -192,23 +212,33 @@ void NextMiner::StratumClient::responseFunction() {
                             sendResponse(version, id);
                         } else if(method == "client.reconnect") {
                             // TODO
+                            log->printf("Stratum: client.reconnect unimplemented",
+                                        Log::Severity::Warning);
                         } else if(method == "client.show_message") {
                             log->printf("Message from server: " +
-                                        res["params"].asString(),
+                                        res["params"][0].asString(),
                                         Log::Severity::Notice);
                         } else if(method == "mining.notify") {
                             // TODO
                             log->printf("Got notify",
                                         Log::Severity::Notice);
                         } else if(method == "mining.set_difficulty") {
-                            std::thread([this]{
+                            std::thread([this, res]{
+                                currentParams.target = DiffToCompact(
+                                                       res["params"][0]
+                                                       .asDouble());
 
-
-                                log->printf("Got set_difficulty",
+                                log->printf("Stratum: mining.set_difficulty(" +
+                                            res["params"][0].asString() +
+                                            ") nBits: " +
+                                            std::to_string(currentParams.target),
                                         Log::Severity::Notice);
                             }).detach();
                         } else if(method == "mining.set_extranonce") {
-                            // TODO
+                            currentParams.extranonce1 = res["params"][0]
+                                                        .asString();
+                            currentParams.extranonce2Size = res["params"][0]
+                                                            .asUInt();
                         }
                     }
                 }

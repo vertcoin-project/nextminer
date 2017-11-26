@@ -95,4 +95,8 @@ uint32_t TargetToCompact(const std::vector<uint32_t>& target) {
     return CBigNum(byteArray).GetCompact();
 }
 
+uint32_t DiffToCompact(const double& diff) {
+    return TargetToCompact(DiffToTarget(diff));
+}
+
 #endif // UTIL_H_INCLUDED

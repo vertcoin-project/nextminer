@@ -71,6 +71,8 @@ namespace NextMiner {
             bool authorize(const std::string& username,
                            const std::string& password);
 
+            void subscribe();
+
             Json::Value request(const std::string& method,
                                 const Json::Value& params);
 
@@ -98,7 +100,7 @@ namespace NextMiner {
                 std::string extranonce1;
                 unsigned int extranonce2Size;
                 uint32_t target;
-            };
+            } currentParams;
     };
 }
 
