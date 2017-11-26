@@ -5,8 +5,6 @@
 #include <vector>
 #include <functional>
 
-#include "blockheader.h"
-
 namespace NextMiner {
     class GetWork {
         public:
@@ -25,7 +23,7 @@ namespace NextMiner {
                     virtual uint32_t getTarget() = 0;
             };
 
-            virtual void registerWorker(std::function<void(const Work&)> cb) = 0;
+            virtual void registerWorker(std::function<void(const bool)> cb) = 0;
 
             virtual std::unique_ptr<Work> getWork() = 0;
 

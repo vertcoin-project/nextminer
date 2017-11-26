@@ -7,6 +7,8 @@
 
 #include <SFML/Network/TcpSocket.hpp>
 
+#include <json/value.h>
+
 #include "getwork.h"
 #include "log.h"
 
@@ -56,7 +58,7 @@ namespace NextMiner {
 
             };
 
-            virtual void registerWorker(std::function<void(const Work&)> cb);
+            virtual void registerWorker(std::function<void(const bool)> cb);
 
             virtual std::unique_ptr<Work> getWork();
 
@@ -93,6 +95,7 @@ namespace NextMiner {
             bool running;
 
             std::unique_ptr<StratumJob> currentJob;
+            std::mutex jobLock;
 
             Log* log;
 
@@ -101,6 +104,9 @@ namespace NextMiner {
                 unsigned int extranonce2Size;
                 uint32_t target;
             } currentParams;
+
+            std::vector<std::function<void(const bool)>> callbacks;
+            std::mutex callbacksLock;
     };
 }
 

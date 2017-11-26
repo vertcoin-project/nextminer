@@ -4,6 +4,9 @@
 
 #include <SFML/Network/IpAddress.hpp>
 
+#include <json/reader.h>
+#include <json/writer.h>
+
 #include "stratumclient.h"
 #include "version.h"
 #include "log.h"
@@ -145,13 +148,17 @@ std::vector<uint8_t> NextMiner::StratumClient::StratumJob::getBytes() {
     return HexToBytes(blockHeaderHex);
 }
 
-void NextMiner::StratumClient::registerWorker(std::function<void(const NextMiner::GetWork::Work&)> cb) {
-    // TODO
+void NextMiner::StratumClient::registerWorker(std::function<void(const bool)> cb) {
+    std::lock_guard<std::mutex> lock(callbacksLock);
+    callbacks.push_back(cb);
 }
 
 std::unique_ptr<NextMiner::GetWork::Work> NextMiner::StratumClient::getWork() {
     StratumJob* job = new StratumJob;
+
+    jobLock.lock();
     *job = *currentJob;
+    jobLock.unlock();
 
     return std::unique_ptr<GetWork::Work>(job);
 }
@@ -215,13 +222,31 @@ void NextMiner::StratumClient::responseFunction() {
                             log->printf("Stratum: client.reconnect unimplemented",
                                         Log::Severity::Warning);
                         } else if(method == "client.show_message") {
-                            log->printf("Message from server: " +
+                            log->printf("Stratum: Message from server: " +
                                         res["params"][0].asString(),
                                         Log::Severity::Notice);
                         } else if(method == "mining.notify") {
-                            // TODO
-                            log->printf("Got notify",
-                                        Log::Severity::Notice);
+                            std::thread([this, res]{
+                                StratumJob* newWork = new StratumJob(
+                                                      res["params"],
+                                                      currentParams.target,
+                                                      currentParams.extranonce1,
+                                                      currentParams
+                                                      .extranonce2Size);
+
+                                jobLock.lock();
+                                currentJob.reset(newWork);
+                                jobLock.unlock();
+
+                                callbacksLock.lock();
+                                for(const auto& cb : callbacks) {
+                                    cb(res["params"][8].asBool());
+                                }
+                                callbacksLock.unlock();
+
+                                log->printf("Stratum: mining.notify",
+                                Log::Severity::Notice);
+                            }).detach();
                         } else if(method == "mining.set_difficulty") {
                             std::thread([this, res]{
                                 currentParams.target = DiffToCompact(
@@ -237,7 +262,7 @@ void NextMiner::StratumClient::responseFunction() {
                         } else if(method == "mining.set_extranonce") {
                             currentParams.extranonce1 = res["params"][0]
                                                         .asString();
-                            currentParams.extranonce2Size = res["params"][0]
+                            currentParams.extranonce2Size = res["params"][1]
                                                             .asUInt();
                         }
                     }

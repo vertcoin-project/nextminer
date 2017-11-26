@@ -45,7 +45,6 @@
 			<Add option="-pthread" />
 		</Linker>
 		<Unit filename="src/bignum.hpp" />
-		<Unit filename="src/blockheader.h" />
 		<Unit filename="src/common.h" />
 		<Unit filename="src/getwork.h" />
 		<Unit filename="src/log.cpp" />
