@@ -5,10 +5,6 @@
 #ifndef BITCOIN_BIGNUM_H
 #define BITCOIN_BIGNUM_H
 
-#ifndef PROTOCOL_VERSION
-#define PROTOCOL_VERSION 70001
-#endif
-
 #include <map>
 #include <limits>
 #include <algorithm>
@@ -18,8 +14,6 @@
 #include "uint256.h"
 
 #include <openssl/bn.h>
-
-#include "serialize.hpp"
 
 using namespace std;
 
@@ -401,26 +395,6 @@ public:
     {
         return ToString(16);
     }
-
-    unsigned int GetSerializeSize(int nType=0, int nVersion=PROTOCOL_VERSION) const
-    {
-        return ::GetSerializeSize(getvch(), nType, nVersion);
-    }
-
-    template<typename Stream>
-    void Serialize(Stream& s, int nType=0, int nVersion=PROTOCOL_VERSION) const
-    {
-        ::Serialize(s, getvch(), nType, nVersion);
-    }
-
-    template<typename Stream>
-    void Unserialize(Stream& s, int nType=0, int nVersion=PROTOCOL_VERSION)
-    {
-        std::vector<unsigned char> vch;
-        ::Unserialize(s, vch, nType, nVersion);
-        setvch(vch);
-    }
-
 
     bool operator!() const
     {
