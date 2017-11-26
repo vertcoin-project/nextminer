@@ -153,8 +153,7 @@ std::vector<uint8_t> NextMiner::StratumClient::StratumJob::getBytes() {
 
     const std::string blockHeaderHex = this->version + prevHash +
                                        merkleRootHex + ntime +
-                                       nbits + ss.str() +
-                                       "000000800000000000000000000000000000000000000000000000000000000000000000000000000000000080020000";
+                                       nbits + ss.str();
 
     return HexToBytes(blockHeaderHex);
 }
