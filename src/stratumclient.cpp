@@ -112,7 +112,7 @@ std::vector<uint8_t> NextMiner::StratumClient::StratumJob::getBytes() {
         merkleRoot = DoubleSHA256(merkleRoot);
     }
 
-    const std::string merkleRootHex = BytesToHex(merkleRoot);
+    const std::string merkleRootHex = BytesToHex(ReverseBytes(merkleRoot));
 
     std::stringstream ss;
     ss << std::hex << std::setfill('0') << std::setw(8) << nonce;

@@ -31,6 +31,10 @@ std::string BytesToHex(const std::vector<uint8_t>& bytes) {
     return ss.str();
 }
 
+std::vector<uint8_t> ReverseBytes(const std::vector<uint8_t>& data) {
+    return std::vector<uint8_t>(data.rbegin(), data.rend());
+}
+
 std::vector<uint8_t> DoubleSHA256(const std::vector<uint8_t>& data) {
     CSHA256 sha;
     std::vector<uint8_t> returning;
