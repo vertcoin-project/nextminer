@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <algorithm>
 
 #include "sha256.h"
 
@@ -29,6 +30,15 @@ std::string BytesToHex(const std::vector<uint8_t>& bytes) {
     }
 
     return ss.str();
+}
+
+template <class T>
+T EndSwap(T& objp) {
+    unsigned char* memp = reinterpret_cast<unsigned char*>(&objp);
+    T returning;
+    std::reverse_copy(memp, memp + sizeof(T), &returning);
+
+    return returning;
 }
 
 std::vector<uint8_t> ReverseBytes(const std::vector<uint8_t>& data) {

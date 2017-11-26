@@ -115,11 +115,12 @@ std::vector<uint8_t> NextMiner::StratumClient::StratumJob::getBytes() {
     const std::string merkleRootHex = BytesToHex(ReverseBytes(merkleRoot));
 
     std::stringstream ss;
-    ss << std::hex << std::setfill('0') << std::setw(8) << nonce;
+    ss << std::hex << std::setfill('0') << std::setw(8) << EndSwap(nonce);
 
     const std::string blockHeaderHex = this->version + prevHash +
                                        merkleRootHex + ntime +
-                                       nbits + ss.str();
+                                       nbits + ss.str() +
+                                       "000000800000000000000000000000000000000000000000000000000000000000000000000000000000000080020000";
 
     return HexToBytes(blockHeaderHex);
 }
