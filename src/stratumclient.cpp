@@ -1,10 +1,13 @@
 #include <sstream>
+#include <random>
+#include <iomanip>
 
 #include <SFML/Network/IpAddress.hpp>
 
 #include "stratumclient.h"
 #include "version.h"
 #include "log.h"
+#include "util.h"
 
 NextMiner::StratumClient::StratumClient(const std::string& host,
                                         const unsigned int port,
@@ -43,19 +46,33 @@ NextMiner::StratumClient::StratumJob::~StratumJob() {
 }
 
 NextMiner::StratumClient::StratumJob::StratumJob(const Json::Value& notifyPayload,
-                                                 const uint32_t target) {
+                                                 const uint32_t target,
+                                                 const std::string& extranonce1,
+                                                 const unsigned int extranonce2Size) {
     jobId = notifyPayload[0].asString();
     prevHash = notifyPayload[1].asString();
     coinb1 = notifyPayload[2].asString();
     coinb2 = notifyPayload[3].asString();
-    for(int i = notifyPayload[4].size(); i >= 0; i--) {
-        merkleHashes.push_back(notifyPayload[4][i].asString());
+    for(const auto& merkleHash : notifyPayload[4]) {
+        merkleHashes.push_back(merkleHash.asString());
     }
-    version = notifyPayload[5].asUInt();
-    nbits = notifyPayload[6].asUInt();
-    ntime = notifyPayload[7].asUInt();
+    version = notifyPayload[5].asString();
+    nbits = notifyPayload[6].asString();
+    ntime = notifyPayload[7].asString();
 
     this->target = target;
+    this->extranonce1 = extranonce1;
+
+    std::seed_seq seed(jobId.begin(), jobId.end());
+    std::default_random_engine generator(seed);
+    std::uniform_int_distribution<uint64_t> distribution(0, std::pow(2, extranonce2Size * 8));
+
+    std::stringstream ss;
+    ss << std::setw(2 * extranonce2Size) << std::setfill('0')
+       << std::hex << distribution(generator);
+
+    extranonce2 = ss.str();
+    nonce = 0;
 }
 
 void NextMiner::StratumClient::StratumJob::operator=(const StratumJob& other) {
@@ -69,6 +86,8 @@ void NextMiner::StratumClient::StratumJob::operator=(const StratumJob& other) {
     ntime = other.ntime;
     nonce = other.nonce;
     target = other.target;
+    extranonce1 = other.extranonce1;
+    extranonce2 = other.extranonce2;
 }
 
 void NextMiner::StratumClient::StratumJob::setNonce(const uint32_t nonce) {
@@ -79,8 +98,30 @@ uint32_t NextMiner::StratumClient::StratumJob::getTarget() {
     return target;
 }
 
-std::array<uint8_t, 80> NextMiner::StratumClient::StratumJob::getBytes() {
-    // TODO
+std::vector<uint8_t> NextMiner::StratumClient::StratumJob::getBytes() {
+    const std::string coinbaseHex = coinb1 + extranonce1 + extranonce2 + coinb2;
+
+    const auto coinbaseBytes = HexToBytes(coinbaseHex);
+    const auto coinbaseBinHash = DoubleSHA256(coinbaseBytes);
+
+    std::vector<uint8_t> merkleRoot = coinbaseBinHash;
+    for(const auto& h : merkleHashes) {
+        const auto hashBytes = HexToBytes(h);
+        merkleRoot.insert(merkleRoot.end(), hashBytes.begin(), hashBytes.end());
+
+        merkleRoot = DoubleSHA256(merkleRoot);
+    }
+
+    const std::string merkleRootHex = BytesToHex(merkleRoot);
+
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0') << std::setw(8) << nonce;
+
+    const std::string blockHeaderHex = this->version + prevHash +
+                                       merkleRootHex + ntime +
+                                       nbits + ss.str();
+
+    return HexToBytes(blockHeaderHex);
 }
 
 void NextMiner::StratumClient::registerWorker(std::function<void(const NextMiner::GetWork::Work&)> cb) {
@@ -147,9 +188,7 @@ void NextMiner::StratumClient::responseFunction() {
                         const uint64_t id = res["id"].asUInt64();
 
                         if(method == "client.get_version") {
-                            std::thread([this, id]{
-                                sendResponse(version, id);
-                            }).detach();
+                            sendResponse(version, id);
                         } else if(method == "client.reconnect") {
                             // TODO
                         } else if(method == "client.show_message") {
@@ -180,14 +219,16 @@ void NextMiner::StratumClient::responseFunction() {
 void NextMiner::StratumClient::sendResponse(const Json::Value& result,
                                             const uint64_t id,
                                             const Json::Value& error) {
-    Json::Value res;
+    std::thread([=]{
+        Json::Value res;
 
-    res["id"] = id;
-    res["jsonrpc"] = "2.0";
-    res["result"] = result;
-    res["error"] = error;
+        res["id"] = id;
+        res["jsonrpc"] = "2.0";
+        res["result"] = result;
+        res["error"] = error;
 
-    sendJson(res);
+        sendJson(res);
+    }).detach();
 }
 
 void NextMiner::StratumClient::sendJson(const Json::Value& payload) {

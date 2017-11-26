@@ -36,7 +36,6 @@
 			<Add option="-Wextra" />
 			<Add option="-Wall" />
 			<Add option="-std=c++14" />
-			<Add option="-Wold-style-cast" />
 		</Compiler>
 		<Linker>
 			<Add option="-ljsoncpp" />
@@ -45,12 +44,16 @@
 			<Add option="-pthread" />
 		</Linker>
 		<Unit filename="src/blockheader.h" />
+		<Unit filename="src/common.h" />
 		<Unit filename="src/getwork.h" />
 		<Unit filename="src/log.cpp" />
 		<Unit filename="src/log.h" />
 		<Unit filename="src/main.cpp" />
+		<Unit filename="src/sha256.cpp" />
+		<Unit filename="src/sha256.h" />
 		<Unit filename="src/stratumclient.cpp" />
 		<Unit filename="src/stratumclient.h" />
+		<Unit filename="src/util.h" />
 		<Unit filename="src/version.h" />
 		<Extensions>
 			<code_completion />

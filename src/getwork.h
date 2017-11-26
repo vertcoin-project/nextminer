@@ -2,7 +2,7 @@
 #define GETWORK_H_INCLUDED
 
 #include <memory>
-#include <array>
+#include <vector>
 #include <functional>
 
 #include "blockheader.h"
@@ -18,7 +18,7 @@ namespace NextMiner {
                     Work() {};
                     virtual ~Work() {};
 
-                    virtual std::array<uint8_t, 80> getBytes() = 0;
+                    virtual std::vector<uint8_t> getBytes() = 0;
 
                     virtual void setNonce(const uint32_t nonce) = 0;
 

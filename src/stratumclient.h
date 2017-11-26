@@ -24,13 +24,15 @@ namespace NextMiner {
             class StratumJob : public Work {
                 public:
                     StratumJob(const Json::Value& notifyPayload,
-                               const uint32_t target);
+                               const uint32_t target,
+                               const std::string& extranonce1,
+                               const unsigned int extranonce2Size);
                     StratumJob();
                     ~StratumJob();
 
                     void operator=(const StratumJob& other);
 
-                    virtual std::array<uint8_t, 80> getBytes();
+                    virtual std::vector<uint8_t> getBytes();
 
                     virtual void setNonce(const uint32_t nonce);
 
@@ -42,12 +44,16 @@ namespace NextMiner {
                     std::string coinb1;
                     std::string coinb2;
                     std::vector<std::string> merkleHashes;
-                    uint32_t version;
-                    uint32_t nbits;
-                    uint32_t ntime;
+                    std::string version;
+                    std::string nbits;
+                    std::string ntime;
 
                     uint32_t nonce;
                     uint32_t target;
+
+                    std::string extranonce1;
+                    std::string extranonce2;
+
             };
 
             virtual void registerWorker(std::function<void(const Work&)> cb);
