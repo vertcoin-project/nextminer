@@ -4,6 +4,7 @@
 #include <string>
 #include <thread>
 #include <mutex>
+#include <random>
 
 #include <SFML/Network/TcpSocket.hpp>
 
@@ -42,6 +43,8 @@ namespace NextMiner {
 
                     virtual uint32_t getTarget();
 
+                    virtual void newExtranonce2();
+
                 protected:
                     std::string jobId;
                     std::string prevHash;
@@ -57,6 +60,10 @@ namespace NextMiner {
 
                     std::string extranonce1;
                     std::string extranonce2;
+
+                    unsigned int extranonce2Size;
+
+                    std::default_random_engine generator;
 
             };
 

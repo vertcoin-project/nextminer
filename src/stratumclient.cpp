@@ -88,14 +88,12 @@ NextMiner::StratumClient::StratumJob::StratumJob(const Json::Value& notifyPayloa
     this->extranonce1 = extranonce1;
 
     std::seed_seq seed(jobId.begin(), jobId.end());
-    std::default_random_engine generator(seed);
-    std::uniform_int_distribution<uint64_t> distribution(0, std::pow(2, extranonce2Size * 8));
+    generator.seed(seed);
 
-    std::stringstream ss;
-    ss << std::setw(2 * extranonce2Size) << std::setfill('0')
-       << std::hex << distribution(generator);
+    this->extranonce2Size = extranonce2Size;
 
-    extranonce2 = ss.str();
+    newExtranonce2();
+
     nonce = 0;
 }
 
@@ -112,6 +110,7 @@ void NextMiner::StratumClient::StratumJob::operator=(const StratumJob& other) {
     target = other.target;
     extranonce1 = other.extranonce1;
     extranonce2 = other.extranonce2;
+    generator = other.generator;
 }
 
 void NextMiner::StratumClient::StratumJob::setNonce(const uint32_t nonce) {
@@ -120,6 +119,17 @@ void NextMiner::StratumClient::StratumJob::setNonce(const uint32_t nonce) {
 
 uint32_t NextMiner::StratumClient::StratumJob::getTarget() {
     return target;
+}
+
+void NextMiner::StratumClient::StratumJob::newExtranonce2() {
+    std::uniform_int_distribution<uint64_t> distribution(0,
+                                            std::pow(2, extranonce2Size * 8));
+
+    std::stringstream ss;
+    ss << std::setw(extranonce2Size * 2) << std::setfill('0')
+       << std::hex << distribution(generator);
+
+    extranonce2 = ss.str();
 }
 
 std::vector<uint8_t> NextMiner::StratumClient::StratumJob::getBytes() {

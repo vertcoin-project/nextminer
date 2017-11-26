@@ -21,6 +21,8 @@ namespace NextMiner {
                     virtual void setNonce(const uint32_t nonce) = 0;
 
                     virtual uint32_t getTarget() = 0;
+
+                    virtual void newExtranonce2() = 0;
             };
 
             virtual void registerWorker(std::function<void(const bool)> cb) = 0;
