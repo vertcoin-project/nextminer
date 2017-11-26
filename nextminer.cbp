@@ -46,6 +46,8 @@
 		</Linker>
 		<Unit filename="src/blockheader.h" />
 		<Unit filename="src/getwork.h" />
+		<Unit filename="src/log.cpp" />
+		<Unit filename="src/log.h" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/stratumclient.cpp" />
 		<Unit filename="src/stratumclient.h" />

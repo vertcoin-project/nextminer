@@ -8,6 +8,7 @@
 #include <SFML/Network/TcpSocket.hpp>
 
 #include "getwork.h"
+#include "log.h"
 
 namespace NextMiner {
     class StratumClient : public GetWork {
@@ -15,7 +16,8 @@ namespace NextMiner {
             StratumClient(const std::string& host,
                           const unsigned int port,
                           const std::string& username,
-                          const std::string& password);
+                          const std::string& password,
+                          Log* log);
 
             ~StratumClient();
 
@@ -83,6 +85,8 @@ namespace NextMiner {
             bool running;
 
             std::unique_ptr<StratumJob> currentJob;
+
+            Log* log;
     };
 }
 

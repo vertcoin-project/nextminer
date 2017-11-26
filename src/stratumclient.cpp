@@ -1,19 +1,21 @@
 #include <sstream>
-#include <iostream>
 
 #include <SFML/Network/IpAddress.hpp>
 
 #include "stratumclient.h"
 #include "version.h"
+#include "log.h"
 
 NextMiner::StratumClient::StratumClient(const std::string& host,
                                         const unsigned int port,
                                         const std::string& username,
-                                        const std::string& password) {
+                                        const std::string& password,
+                                        NextMiner::Log* log) {
     reqId = 0;
+    this->log = log;
 
     if(socket.connect(host, port) != sf::Socket::Status::Done) {
-        throw std::runtime_error("Failed to connect to stratum server");
+        log->printf("Failed to connect to stratum server", Log::Severity::Error);
     }
 
     socket.setBlocking(false);
@@ -23,7 +25,7 @@ NextMiner::StratumClient::StratumClient(const std::string& host,
     responseThread.reset(new std::thread(&NextMiner::StratumClient::responseFunction, this));
 
     if(!authorize(username, password)) {
-        throw std::runtime_error("Failed to authorize with stratum server");
+        log->printf("Failed to authorize with stratum server", Log::Severity::Error);
     }
 }
 
@@ -145,22 +147,25 @@ void NextMiner::StratumClient::responseFunction() {
                         const uint64_t id = res["id"].asUInt64();
 
                         if(method == "client.get_version") {
-                            sendResponse(version, id);
+                            std::thread([this, id]{
+                                sendResponse(version, id);
+                            }).detach();
                         } else if(method == "client.reconnect") {
                             // TODO
-                            std::cout << "Got reconnect!" << std::endl;
                         } else if(method == "client.show_message") {
-                            // TODO
-                            std::cout << "Got show_message!" << std::endl;
+                            log->printf("Message from server: " +
+                                        res["params"].asString(),
+                                        Log::Severity::Notice);
                         } else if(method == "mining.notify") {
                             // TODO
-                            std::cout << "Got notify!" << std::endl;
+                            log->printf("Got notify",
+                                        Log::Severity::Notice);
                         } else if(method == "mining.set_difficulty") {
                             // TODO
-                            std::cout << "Got set_difficulty!" << std::endl;
+                            log->printf("Got set_difficulty",
+                                        Log::Severity::Notice);
                         } else if(method == "mining.set_extranonce") {
                             // TODO
-                            std::cout << "Got set_extranonce!" << std::endl;
                         }
                     }
                 }
