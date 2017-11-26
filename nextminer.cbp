@@ -36,23 +36,28 @@
 			<Add option="-Wextra" />
 			<Add option="-Wall" />
 			<Add option="-std=c++14" />
+			<Add directory="/usr/include" />
 		</Compiler>
 		<Linker>
 			<Add option="-ljsoncpp" />
 			<Add option="-lsfml-network" />
 			<Add option="-lsfml-system" />
+			<Add option="-lcrypto" />
 			<Add option="-pthread" />
 		</Linker>
+		<Unit filename="src/bignum.hpp" />
 		<Unit filename="src/blockheader.h" />
 		<Unit filename="src/common.h" />
 		<Unit filename="src/getwork.h" />
 		<Unit filename="src/log.cpp" />
 		<Unit filename="src/log.h" />
 		<Unit filename="src/main.cpp" />
+		<Unit filename="src/serialize.hpp" />
 		<Unit filename="src/sha256.cpp" />
 		<Unit filename="src/sha256.h" />
 		<Unit filename="src/stratumclient.cpp" />
 		<Unit filename="src/stratumclient.h" />
+		<Unit filename="src/uint256.h" />
 		<Unit filename="src/util.h" />
 		<Unit filename="src/version.h" />
 		<Extensions>

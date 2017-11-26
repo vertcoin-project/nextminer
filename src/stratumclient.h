@@ -93,6 +93,12 @@ namespace NextMiner {
             std::unique_ptr<StratumJob> currentJob;
 
             Log* log;
+
+            struct currentParams {
+                std::string extranonce1;
+                unsigned int extranonce2Size;
+                uint32_t target;
+            };
     };
 }
 

@@ -201,9 +201,12 @@ void NextMiner::StratumClient::responseFunction() {
                             log->printf("Got notify",
                                         Log::Severity::Notice);
                         } else if(method == "mining.set_difficulty") {
-                            // TODO
-                            log->printf("Got set_difficulty",
+                            std::thread([this]{
+
+
+                                log->printf("Got set_difficulty",
                                         Log::Severity::Notice);
+                            }).detach();
                         } else if(method == "mining.set_extranonce") {
                             // TODO
                         }

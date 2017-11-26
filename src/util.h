@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "sha256.h"
+#include "bignum.hpp"
 
 std::vector<uint8_t> HexToBytes(const std::string& hex) {
     std::vector<uint8_t> bytes;
@@ -48,6 +49,7 @@ std::vector<uint8_t> ReverseBytes(const std::vector<uint8_t>& data) {
 std::vector<uint8_t> DoubleSHA256(const std::vector<uint8_t>& data) {
     CSHA256 sha;
     std::vector<uint8_t> returning;
+    returning.resize(32);
 
     sha.Write(&data[0], data.size());
     sha.Finalize(&returning[0]);
@@ -58,6 +60,39 @@ std::vector<uint8_t> DoubleSHA256(const std::vector<uint8_t>& data) {
     sha.Finalize(&returning[0]);
 
     return returning;
+}
+
+std::vector<uint32_t> DiffToTarget(const double& diff) {
+    uint64_t m;
+    int k;
+    double ourDiff = diff;
+
+    for(k = 6; k > 0 && ourDiff > 1.0; k--) {
+        ourDiff /= 4294967296.0;
+    }
+    m = static_cast<uint64_t>(4294901760.0 / ourDiff);
+
+    std::vector<uint32_t> target;
+    target.resize(8);
+
+    if(m == 0 && k == 6) {
+        std::fill(target.begin(), target.end(), 0xffffffff);
+    } else {
+        std::fill(target.begin(), target.end(), 0x00000000);
+        target[k] = static_cast<uint32_t>(m);
+        target[k + 1] = static_cast<uint32_t>(m >> 32);
+    }
+
+    return target;
+}
+
+uint32_t TargetToCompact(const std::vector<uint32_t>& target) {
+    std::vector<uint8_t> byteArray;
+    for(unsigned int i = 0; i < target.size() * 4; i++) {
+        byteArray.push_back(*(reinterpret_cast<const uint8_t*>(target.data()) + i));
+    }
+
+    return CBigNum(byteArray).GetCompact();
 }
 
 #endif // UTIL_H_INCLUDED
