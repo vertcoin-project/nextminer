@@ -19,6 +19,7 @@ NextMiner::StratumClient::StratumClient(const std::string& host,
                                         NextMiner::Log* log) {
     reqId = 0;
     this->log = log;
+    this->username = username;
 
     if(socket.connect(host, port) != sf::Socket::Status::Done) {
         log->printf("Failed to connect to stratum server", Log::Severity::Error);
@@ -164,7 +165,24 @@ std::unique_ptr<NextMiner::GetWork::Work> NextMiner::StratumClient::getWork() {
 }
 
 std::tuple<bool, std::string> NextMiner::StratumClient::submitWork(const NextMiner::GetWork::Work& work) {
-    // TODO
+    const StratumJob& job = dynamic_cast<const StratumJob&>(work);
+
+    Json::Value params;
+    params.append(username);
+    params.append(job.jobId);
+    params.append(job.extranonce2);
+    params.append(job.ntime);
+
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0') << std::setw(8) << EndSwap(job.nonce);
+    params.append(ss.str());
+
+    const Json::Value res = request("mining.submit", params);
+    if(res["result"].asBool()) {
+        return std::make_tuple(true, "");
+    } else {
+        return std::make_tuple(false, res["error"].asString());
+    }
 }
 
 void NextMiner::StratumClient::suggestTarget(const uint32_t target) {
@@ -270,7 +288,7 @@ void NextMiner::StratumClient::responseFunction() {
             }
         } else {
             socketLock.unlock();
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     }
 }

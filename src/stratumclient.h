@@ -24,6 +24,8 @@ namespace NextMiner {
             ~StratumClient();
 
             class StratumJob : public Work {
+                friend class StratumClient;
+
                 public:
                     StratumJob(const Json::Value& notifyPayload,
                                const uint32_t target,
@@ -107,6 +109,8 @@ namespace NextMiner {
 
             std::vector<std::function<void(const bool)>> callbacks;
             std::mutex callbacksLock;
+
+            std::string username;
     };
 }
 
