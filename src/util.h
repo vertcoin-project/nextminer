@@ -109,4 +109,8 @@ uint32_t DiffToCompact(const double& diff) {
     return TargetToCompact(DiffToTarget(diff));
 }
 
+uint256 CompactToTarget(const uint32_t compact) {
+    return CBigNum().SetCompact(compact).getuint256();
+}
+
 #endif // UTIL_H_INCLUDED
