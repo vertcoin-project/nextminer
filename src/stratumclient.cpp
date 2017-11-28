@@ -164,13 +164,17 @@ void NextMiner::StratumClient::registerWorker(std::function<void(const bool)> cb
 }
 
 std::unique_ptr<NextMiner::GetWork::Work> NextMiner::StratumClient::getWork() {
-    StratumJob* job = new StratumJob;
+    if(currentJob) {
+        StratumJob* job = new StratumJob;
 
-    jobLock.lock();
-    *job = *currentJob;
-    jobLock.unlock();
+        jobLock.lock();
+        *job = *currentJob;
+        jobLock.unlock();
 
-    return std::unique_ptr<GetWork::Work>(job);
+        return std::unique_ptr<GetWork::Work>(job);
+    } else {
+        return std::unique_ptr<GetWork::Work>();
+    }
 }
 
 std::tuple<bool, std::string> NextMiner::StratumClient::submitWork(const NextMiner::GetWork::Work& work) {
