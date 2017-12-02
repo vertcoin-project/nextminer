@@ -265,6 +265,8 @@ void NextMiner::StratumClient::responseFunction() {
                                                       currentParams
                                                       .extranonce2Size);
 
+                                const auto hexBytes = BytesToHex(newWork->getBytes());
+
                                 jobLock.lock();
                                 currentJob.reset(newWork);
                                 jobLock.unlock();
@@ -275,7 +277,7 @@ void NextMiner::StratumClient::responseFunction() {
                                 }
                                 callbacksLock.unlock();
 
-                                log->printf("Stratum: mining.notify " + BytesToHex(newWork->getBytes()),
+                                log->printf("Stratum: mining.notify " + hexBytes,
                                 Log::Severity::Notice);
                             }).detach();
                         } else if(method == "mining.set_difficulty") {
