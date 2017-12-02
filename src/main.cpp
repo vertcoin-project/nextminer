@@ -9,9 +9,7 @@ int main() {
         new NextMiner::StratumClient("18.250.0.71", 9271, "jamesl222", "x", log.get()));
 
     // Wait until the workSource has work for us
-    auto work = workSource->getWork();
-    while(!work) {
-        work = workSource->getWork();
+    while(!workSource->getWork()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
@@ -22,7 +20,7 @@ int main() {
 
     bool running = true;
     while(running) {
-        work = workSource->getWork();
+        auto work = workSource->getWork();
         stale = false;
         const uint256 target = CompactToTarget(work->getTarget());
         uint256 lowest("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
