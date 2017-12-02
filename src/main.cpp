@@ -35,20 +35,22 @@ int main() {
 
         uint32_t nonce = 0;
 
+        auto headerBytes = work->getBytes();
+
         while(!stale) {
-            work->setNonce(nonce++);
-            const auto headerBytes = work->getBytes();
+            *reinterpret_cast<uint32_t*>(&headerBytes[76]) = EndSwap(++nonce);
 
             lyra2re2_hash(reinterpret_cast<const char*>(&headerBytes[0]),
                           reinterpret_cast<char*>(&outputBuffer[0]));
 
             const uint256 result = CBigNum(outputBuffer).getuint256();
 
-            if(nonce % (1000) == 0) {
+            if(nonce % (100000) == 0) {
                 log->printf(lowest.ToString(), NextMiner::Log::Severity::Notice);
             }
 
             if(result < target) {
+                work->setNonce(nonce - 1);
                 const auto res = workSource->submitWork(*work);
                 log->printf("Found valid share!! " + std::get<1>(res), NextMiner::Log::Severity::Notice);
                 running = false;
