@@ -366,7 +366,7 @@ Json::Value NextMiner::StratumClient::request(const std::string& method,
         responsesLock.unlock();
 
         attempts++;
-        if(attempts > 50) {
+        if(attempts > 2000) {
             throw std::runtime_error("Lost connection with stratum server");
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(5));

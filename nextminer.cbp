@@ -44,6 +44,43 @@
 			<Add option="-lcrypto" />
 			<Add option="-pthread" />
 		</Linker>
+		<Unit filename="src/Lyra2RE/Lyra2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Lyra2RE/Lyra2.h" />
+		<Unit filename="src/Lyra2RE/Lyra2RE.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Lyra2RE/Lyra2RE.h" />
+		<Unit filename="src/Lyra2RE/Sponge.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Lyra2RE/Sponge.h" />
+		<Unit filename="src/Lyra2RE/blake.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Lyra2RE/bmw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Lyra2RE/cubehash.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Lyra2RE/groestl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Lyra2RE/keccak.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Lyra2RE/skein.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Lyra2RE/sph_blake.h" />
+		<Unit filename="src/Lyra2RE/sph_bmw.h" />
+		<Unit filename="src/Lyra2RE/sph_cubehash.h" />
+		<Unit filename="src/Lyra2RE/sph_groestl.h" />
+		<Unit filename="src/Lyra2RE/sph_keccak.h" />
+		<Unit filename="src/Lyra2RE/sph_skein.h" />
+		<Unit filename="src/Lyra2RE/sph_types.h" />
 		<Unit filename="src/bignum.hpp" />
 		<Unit filename="src/common.h" />
 		<Unit filename="src/getwork.h" />

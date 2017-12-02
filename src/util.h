@@ -5,12 +5,13 @@
 #include <string>
 #include <array>
 #include <algorithm>
-#include <iostream>
+#include <sstream>
+#include <iomanip>
 
 #include "sha256.h"
 #include "bignum.hpp"
 
-std::vector<uint8_t> HexToBytes(const std::string& hex) {
+inline std::vector<uint8_t> HexToBytes(const std::string& hex) {
     std::vector<uint8_t> bytes;
 
     for(unsigned int i = 0; i < hex.length(); i += 2) {
@@ -23,7 +24,7 @@ std::vector<uint8_t> HexToBytes(const std::string& hex) {
     return bytes;
 }
 
-std::string BytesToHex(const std::vector<uint8_t>& bytes) {
+inline std::string BytesToHex(const std::vector<uint8_t>& bytes) {
     std::stringstream ss;
 
     ss << std::hex << std::setfill('0');
@@ -52,11 +53,11 @@ T EndSwap(T u){
     return dest.u;
 }
 
-std::vector<uint8_t> ReverseBytes(const std::vector<uint8_t>& data) {
+inline std::vector<uint8_t> ReverseBytes(const std::vector<uint8_t>& data) {
     return std::vector<uint8_t>(data.rbegin(), data.rend());
 }
 
-std::vector<uint8_t> DoubleSHA256(const std::vector<uint8_t>& data) {
+inline std::vector<uint8_t> DoubleSHA256(const std::vector<uint8_t>& data) {
     CSHA256 sha;
     std::vector<uint8_t> returning;
     returning.resize(32);
@@ -72,7 +73,7 @@ std::vector<uint8_t> DoubleSHA256(const std::vector<uint8_t>& data) {
     return returning;
 }
 
-std::vector<uint32_t> DiffToTarget(const double& diff) {
+inline std::vector<uint32_t> DiffToTarget(const double& diff) {
     uint64_t m;
     int k;
     double ourDiff = diff;
@@ -96,7 +97,7 @@ std::vector<uint32_t> DiffToTarget(const double& diff) {
     return target;
 }
 
-uint32_t TargetToCompact(const std::vector<uint32_t>& target) {
+inline uint32_t TargetToCompact(const std::vector<uint32_t>& target) {
     std::vector<uint8_t> byteArray;
     for(unsigned int i = 0; i < target.size() * 4; i++) {
         byteArray.push_back(*(reinterpret_cast<const uint8_t*>(target.data()) + i));
@@ -105,11 +106,11 @@ uint32_t TargetToCompact(const std::vector<uint32_t>& target) {
     return CBigNum(byteArray).GetCompact();
 }
 
-uint32_t DiffToCompact(const double& diff) {
+inline uint32_t DiffToCompact(const double& diff) {
     return TargetToCompact(DiffToTarget(diff));
 }
 
-uint256 CompactToTarget(const uint32_t compact) {
+inline uint256 CompactToTarget(const uint32_t compact) {
     return CBigNum().SetCompact(compact).getuint256();
 }
 
