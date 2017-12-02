@@ -48,10 +48,14 @@ int main() {
             }
 
             if(result < target) {
-                work->setNonce(nonce);
-                const auto res = workSource->submitWork(*work);
-                log->printf("Found valid share!! " + std::get<1>(res), NextMiner::Log::Severity::Notice);
-                running = false;
+                std::thread([&, work = move(work), nonce]{
+                    work->setNonce(nonce);
+                    const auto res = workSource->submitWork(*work);
+                    log->printf("Found share!! Valid: " +
+                            std::to_string(std::get<0>(res)) +
+                            " " +
+                            std::get<1>(res), NextMiner::Log::Severity::Notice);
+                }).detach();
                 break;
             }
 

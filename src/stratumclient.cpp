@@ -97,20 +97,22 @@ NextMiner::StratumClient::StratumJob::StratumJob(const Json::Value& notifyPayloa
     nonce = 0;
 }
 
-void NextMiner::StratumClient::StratumJob::operator=(const StratumJob& other) {
-    jobId = other.jobId;
-    prevHash = other.prevHash;
-    coinb1 = other.coinb1;
-    coinb2 = other.coinb2;
-    merkleHashes = other.merkleHashes;
-    version = other.version;
-    nbits = other.nbits;
-    ntime = other.ntime;
-    nonce = other.nonce;
-    target = other.target;
-    extranonce1 = other.extranonce1;
-    extranonce2 = other.extranonce2;
-    generator = other.generator;
+void NextMiner::StratumClient::StratumJob::operator=(const Work& other) {
+    const StratumJob& stratumOther = dynamic_cast<const StratumJob&>(other);
+
+    jobId = stratumOther.jobId;
+    prevHash = stratumOther.prevHash;
+    coinb1 = stratumOther.coinb1;
+    coinb2 = stratumOther.coinb2;
+    merkleHashes = stratumOther.merkleHashes;
+    version = stratumOther.version;
+    nbits = stratumOther.nbits;
+    ntime = stratumOther.ntime;
+    nonce = stratumOther.nonce;
+    target = stratumOther.target;
+    extranonce1 = stratumOther.extranonce1;
+    extranonce2 = stratumOther.extranonce2;
+    generator = stratumOther.generator;
 }
 
 void NextMiner::StratumClient::StratumJob::setNonce(const uint32_t nonce) {

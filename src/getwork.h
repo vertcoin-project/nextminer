@@ -13,8 +13,9 @@ namespace NextMiner {
 
             class Work {
                 public:
-                    Work() {};
                     virtual ~Work() {};
+
+                    virtual void operator=(const Work& other) {};
 
                     virtual std::vector<uint8_t> getBytes() = 0;
 

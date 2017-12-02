@@ -35,7 +35,7 @@ namespace NextMiner {
                     StratumJob();
                     ~StratumJob();
 
-                    void operator=(const StratumJob& other);
+                    virtual void operator=(const Work& other);
 
                     virtual std::vector<uint8_t> getBytes();
 
