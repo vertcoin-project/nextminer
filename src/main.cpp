@@ -50,7 +50,7 @@ int main() {
             }
 
             if(result < target) {
-                work->setNonce(nonce - 1);
+                work->setNonce(nonce);
                 const auto res = workSource->submitWork(*work);
                 log->printf("Found valid share!! " + std::get<1>(res), NextMiner::Log::Severity::Notice);
                 running = false;
@@ -59,6 +59,10 @@ int main() {
 
             if(result < lowest) {
                 lowest = result;
+            }
+
+            if(nonce == std::numeric_limits<uint32_t>::max()) {
+                work->newExtranonce2();
             }
         }
     }
