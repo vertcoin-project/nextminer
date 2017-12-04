@@ -34,17 +34,17 @@ void NextMiner::Log::printf(const std::string& msg, const Severity& severity) {
 
         switch(severity) {
             case Severity::Error: {
-                ss << "   ERROR   ";
+                ss << " ERROR   ";
                 break;
             }
 
             case Severity::Notice: {
-                ss << "   NOTICE  ";
+                ss << " NOTICE  ";
                 break;
             }
 
             case Severity::Warning: {
-                ss << "   WARNING ";
+                ss << " WARNING ";
                 break;
             }
 
