@@ -125,7 +125,8 @@ uint32_t NextMiner::StratumClient::StratumJob::getTarget() {
 
 void NextMiner::StratumClient::StratumJob::newExtranonce2() {
     std::uniform_int_distribution<uint64_t> distribution(0,
-                                            std::pow(2, extranonce2Size * 8));
+                                            std::pow(2, extranonce2Size * 8)
+                                                                        - 1);
 
     std::stringstream ss;
     ss << std::setw(extranonce2Size * 2) << std::setfill('0')
