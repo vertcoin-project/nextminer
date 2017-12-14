@@ -31,11 +31,19 @@ NextMiner::StratumClient::StratumClient(const std::string& host,
 
     responseThread.reset(new std::thread(&NextMiner::StratumClient::responseFunction, this));
 
+    subscribe();
+
     if(!authorize(username, password)) {
         log->printf("Failed to authorize with stratum server", Log::Severity::Error);
     }
 
-    subscribe();
+    Json::Value req;
+    req["id"] = reqId++;
+    req["jsonrpc"] = "2.0";
+    req["params"] = Json::nullValue;
+    req["method"] = "mining.extranonce.subscribe";
+
+    sendJson(req);
 }
 
 NextMiner::StratumClient::~StratumClient() {
@@ -44,21 +52,11 @@ NextMiner::StratumClient::~StratumClient() {
 }
 
 void NextMiner::StratumClient::subscribe() {
-    std::thread([this]{
-        Json::Value params;
-        params.append(version);
-        const Json::Value res = request("mining.subscribe", params);
-        currentParams.extranonce1 = res["result"][1].asString();
-        currentParams.extranonce2Size = res["result"][2].asUInt();
-
-        Json::Value req;
-        req["id"] = reqId++;
-        req["jsonrpc"] = "2.0";
-        req["params"] = Json::nullValue;
-        req["method"] = "mining.extranonce.subscribe";
-
-        sendJson(req);
-    }).detach();
+    Json::Value params;
+    params.append(version);
+    const Json::Value res = request("mining.subscribe", params);
+    currentParams.extranonce1 = res["result"][1].asString();
+    currentParams.extranonce2Size = res["result"][2].asUInt();
 }
 
 NextMiner::StratumClient::StratumJob::StratumJob() {
@@ -201,28 +199,32 @@ std::tuple<bool, std::string> NextMiner::StratumClient::submitWork(const NextMin
     }
 }
 
-void NextMiner::StratumClient::suggestTarget(const uint32_t target) {
-    std::stringstream ss;
-
-    ss << std::hex << target;
+void NextMiner::StratumClient::suggestDifficulty(const double difficulty) {
+    Json::Value params;
+    params.append(difficulty);
 
     Json::Value req;
     req["id"] = reqId++;
-    req["method"] = "mining.suggest_target";
+    req["method"] = "mining.suggest_difficulty";
     req["jsonrpc"] = "2.0";
-    req["params"] = ss.str();
+    req["params"] = params;
 
     sendJson(req);
 }
 
 void NextMiner::StratumClient::responseFunction() {
+    std::string leftOvers;
     while(running) {
-        std::string buffer(102400, '\0');
+        std::string buffer(1024 * 20, '\0');
         size_t received;
         socketLock.lock();
-        if(socket.receive(&buffer[0], buffer.capacity(), received) == sf::Socket::Status::Done) {
+        if(socket.receive(&buffer[0], buffer.capacity(), received) != sf::Socket::Status::Error) {
             socketLock.unlock();
             buffer.resize(received);
+            if(leftOvers.size() > 0) {
+                buffer = leftOvers + buffer;
+                leftOvers = "";
+            }
 
             std::stringstream ss(buffer);
             std::string line;
@@ -237,6 +239,10 @@ void NextMiner::StratumClient::responseFunction() {
                     Json::parseFromStream(rbuilder, input, &res, &errs);
                 } catch(const Json::Exception& e) {
                     res = Json::nullValue;
+                }
+
+                if(errs.size() > 0) {
+                    leftOvers = line;
                 }
 
                 if(res.isObject()) {
@@ -260,7 +266,7 @@ void NextMiner::StratumClient::responseFunction() {
                                         res["params"][0].asString(),
                                         Log::Severity::Notice);
                         } else if(method == "mining.notify") {
-                            std::thread([this, res]{
+                            if(currentParams.extranonce2Size <= 32) {
                                 StratumJob* newWork = new StratumJob(
                                                       res["params"],
                                                       currentParams.target,
@@ -280,21 +286,21 @@ void NextMiner::StratumClient::responseFunction() {
                                 }
                                 callbacksLock.unlock();
 
-                                log->printf("Stratum: mining.notify " + hexBytes,
-                                Log::Severity::Notice);
-                            }).detach();
+                                //log->printf("Stratum: mining.notify " + hexBytes,
+                                //Log::Severity::Notice);
+                            }
                         } else if(method == "mining.set_difficulty") {
-                            std::thread([this, res]{
+                            //std::thread([this, res]{
                                 currentParams.target = DiffToCompact(
                                                        res["params"][0]
-                                                       .asDouble());
+                                                       .asDouble() / 256);
 
-                                log->printf("Stratum: mining.set_difficulty(" +
-                                            res["params"][0].asString() +
-                                            ") nBits: " +
-                                            std::to_string(currentParams.target),
-                                        Log::Severity::Notice);
-                            }).detach();
+                                //log->printf("Stratum: mining.set_difficulty(" +
+                                            //res["params"][0].asString() +
+                                            //") nBits: " +
+                                            //std::to_string(currentParams.target),
+                                        //Log::Severity::Notice);
+                            //}).detach();
                         } else if(method == "mining.set_extranonce") {
                             currentParams.extranonce1 = res["params"][0]
                                                         .asString();
@@ -306,7 +312,7 @@ void NextMiner::StratumClient::responseFunction() {
             }
         } else {
             socketLock.unlock();
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
 }
@@ -314,7 +320,7 @@ void NextMiner::StratumClient::responseFunction() {
 void NextMiner::StratumClient::sendResponse(const Json::Value& result,
                                             const uint64_t id,
                                             const Json::Value& error) {
-    std::thread([=]{
+    //std::thread([=]{
         Json::Value res;
 
         res["id"] = id;
@@ -323,7 +329,7 @@ void NextMiner::StratumClient::sendResponse(const Json::Value& result,
         res["error"] = error;
 
         sendJson(res);
-    }).detach();
+    //}).detach();
 }
 
 void NextMiner::StratumClient::sendJson(const Json::Value& payload) {

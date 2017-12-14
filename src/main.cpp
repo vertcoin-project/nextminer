@@ -1,3 +1,7 @@
+#ifdef __linux
+#include <pthread.h>
+#endif // __linux
+
 #include "Lyra2RE/Lyra2RE.h"
 
 #include "util.h"
@@ -17,8 +21,12 @@ int main() {
 
     bool stale = false;
     workSource->registerWorker([&](const bool discardOld){
-        stale = true;
+        if(discardOld) {
+            stale = true;
+        }
     });
+
+    workSource->suggestDifficulty(2000);
 
     bool running = true;
     while(running) {
@@ -37,38 +45,93 @@ int main() {
 
         auto headerBytes = work->getBytes();
 
-        while(!stale) {
-            *reinterpret_cast<uint32_t*>(&headerBytes[76]) = EndSwap(++nonce);
+        #ifdef __linux
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(0, &cpuset);
+        #endif // __linux
 
-            lyra2re2_hash(reinterpret_cast<const char*>(&headerBytes[0]),
-                          reinterpret_cast<char*>(&outputBuffer[0]));
+        std::thread minerThread([&]{
 
-            const uint256 result = CBigNum(outputBuffer).getuint256();
+            /* Believe it or not, C++11 is _still_ a low level language,
+               thus we have to set affinity after the thread has started.
+               Sleep for a while before starting to give us time.
+            */
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-            if(result < target) {
-                std::thread([&, work = move(work), nonce]{
-                    work->setNonce(nonce);
-                    const auto res = workSource->submitWork(*work);
-                    log->printf("Found share!! Valid: " +
-                            std::to_string(std::get<0>(res)) +
-                            " " +
-                            std::get<1>(res), NextMiner::Log::Severity::Notice);
-                }).detach();
-                break;
+            uint64_t startTime = std::chrono::duration_cast
+                                 <std::chrono::milliseconds>(
+                                 std::chrono::system_clock::now()
+                                 .time_since_epoch()).count();
+
+            auto printHashrate = [&]{
+                const uint64_t endTime = std::chrono::duration_cast
+                                         <std::chrono::milliseconds>(
+                                         std::chrono::system_clock::now()
+                                         .time_since_epoch()).count();
+                const auto rate = nonce / (double(endTime - startTime) / 1000);
+                const double hashes = rate / 1000;
+                log->printf("Miner: HR: "
+                            + std::to_string(hashes)
+                            + " KH/s",
+                            NextMiner::Log::Severity::Notice);
+                startTime = std::chrono::duration_cast
+                            <std::chrono::milliseconds>(
+                            std::chrono::system_clock::now()
+                            .time_since_epoch()).count();
+            };
+
+            while(!stale) {
+                *reinterpret_cast<uint32_t*>(&headerBytes[76]) = EndSwap(++nonce);
+
+                lyra2re2_hash(reinterpret_cast<const char*>(&headerBytes[0]),
+                              reinterpret_cast<char*>(&outputBuffer[0]));
+
+                const uint256 result = CBigNum(outputBuffer).getuint256();
+
+                if(result < target) {
+                    std::thread([&, work = move(work), nonce]{
+                        work->setNonce(nonce);
+                        const auto res = workSource->submitWork(*work);
+                        log->printf("Found share!! Valid: " +
+                                std::to_string(std::get<0>(res)) +
+                                " " +
+                                std::get<1>(res), NextMiner::Log::Severity::Notice);
+                    }).detach();
+                    break;
+                }
+
+                /*if(result < lowest) {
+                    lowest = result;
+                }*/
+
+                /*if(nonce % 1000000 == 0) {
+                    log->printf(lowest.ToString(),
+                                NextMiner::Log::Severity::Notice);
+                }*/
+
+                if(nonce == std::numeric_limits<uint32_t>::max()) {
+                    work->newExtranonce2();
+                    printHashrate();
+                }
             }
 
-            if(result < lowest) {
-                lowest = result;
-            }
+            printHashrate();
+        });
 
-            if(nonce % 1000000 == 0) {
-                log->printf(lowest.ToString(), NextMiner::Log::Severity::Notice);
-            }
+        // There's also no way to do cross platform thread properties in C++ yet
+        #ifdef __linux
+        const int rcAffinity = pthread_setaffinity_np(minerThread.native_handle(),
+                                                      sizeof(cpu_set_t),
+                                                      &cpuset);
 
-            if(nonce == std::numeric_limits<uint32_t>::max()) {
-                work->newExtranonce2();
-            }
+        if(rcAffinity != 0) {
+            log->printf("Couldn't set thread affinity",
+                        NextMiner::Log::Severity::Warning);
         }
+        #endif // __linux
+
+        minerThread.join();
     }
 
     return 0;

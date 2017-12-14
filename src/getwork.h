@@ -32,7 +32,7 @@ namespace NextMiner {
 
             virtual std::tuple<bool, std::string> submitWork(const Work& work) = 0;
 
-            virtual void suggestTarget(const uint32_t target) = 0;
+            virtual void suggestDifficulty(const double difficulty) = 0;
     };
 }
 

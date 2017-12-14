@@ -73,7 +73,7 @@ namespace NextMiner {
 
             virtual std::tuple<bool, std::string> submitWork(const Work& work);
 
-            virtual void suggestTarget(const uint32_t target);
+            virtual void suggestDifficulty(const double difficulty);
 
         private:
             sf::TcpSocket socket;
