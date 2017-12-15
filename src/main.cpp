@@ -10,7 +10,7 @@
 int main() {
     std::unique_ptr<NextMiner::Log> log(new NextMiner::Log);
     std::unique_ptr<NextMiner::GetWork> workSource(
-        new NextMiner::StratumClient("18.250.0.71", 9271,
+        new NextMiner::StratumClient("localhost", 9171,
                                      "VnUxCjoLSv1U5pxegJBGxX8anDnop77DWz", "x",
                                      log.get()));
 
@@ -32,10 +32,11 @@ int main() {
     while(running) {
         auto work = workSource->getWork();
         stale = false;
-        const uint256 target = CompactToTarget(work->getTarget());
-        uint256 lowest("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        const uint64_t target = EndSwap(*reinterpret_cast<uint64_t*>(&HexToBytes(CompactToTarget(work->getTarget()).ToString())[0]));
+        uint64_t lowest = 0xffffffffffffffff;
+        std::vector<uint8_t> lowestHash;
 
-        log->printf("Trying to get: " + target.ToString(),
+        log->printf("Trying to get: " + std::to_string(target) + " " + CompactToTarget(work->getTarget()).ToString(),
                     NextMiner::Log::Severity::Notice);
 
         std::vector<uint8_t> outputBuffer;
@@ -87,8 +88,7 @@ int main() {
                 lyra2re2_hash(reinterpret_cast<const char*>(&headerBytes[0]),
                               reinterpret_cast<char*>(&outputBuffer[0]));
 
-                const uint256 result = CBigNum(outputBuffer).getuint256();
-
+                const uint64_t result = *reinterpret_cast<uint64_t*>(&outputBuffer[24]);
                 if(result < target) {
                     std::thread([&, work = move(work), nonce]{
                         work->setNonce(nonce);
@@ -96,19 +96,21 @@ int main() {
                         log->printf("Found share!! Valid: " +
                                 std::to_string(std::get<0>(res)) +
                                 " " +
-                                std::get<1>(res), NextMiner::Log::Severity::Notice);
+                                std::get<1>(res),
+                                NextMiner::Log::Severity::Notice);
                     }).detach();
                     break;
                 }
 
-                /*if(result < lowest) {
+                if(result < lowest) {
                     lowest = result;
-                }*/
+                    lowestHash = outputBuffer;
+                }
 
-                /*if(nonce % 1000000 == 0) {
-                    log->printf(lowest.ToString(),
+                if(nonce % 1000000 == 0) {
+                    log->printf(std::to_string(lowest) + " " + BytesToHex(lowestHash),
                                 NextMiner::Log::Severity::Notice);
-                }*/
+                }
 
                 if(nonce == std::numeric_limits<uint32_t>::max()) {
                     work->newExtranonce2();
@@ -133,6 +135,8 @@ int main() {
 
         minerThread.join();
     }
+
+
 
     return 0;
 }

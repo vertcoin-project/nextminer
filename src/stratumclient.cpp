@@ -1,6 +1,7 @@
 #include <sstream>
 #include <random>
 #include <iomanip>
+#include <iostream>
 
 #include <SFML/Network/IpAddress.hpp>
 
@@ -147,7 +148,7 @@ std::vector<uint8_t> NextMiner::StratumClient::StratumJob::getBytes() {
         merkleRoot = DoubleSHA256(merkleRoot);
     }
 
-    const std::string merkleRootHex = BytesToHex(ReverseBytes(merkleRoot));
+    const std::string merkleRootHex = BytesToHex(ReverseWords(merkleRoot));
 
     std::stringstream ss;
     ss << std::hex << std::setfill('0') << std::setw(8) << EndSwap(nonce);
@@ -156,7 +157,7 @@ std::vector<uint8_t> NextMiner::StratumClient::StratumJob::getBytes() {
                                        merkleRootHex + ntime +
                                        nbits + ss.str();
 
-    return HexToBytes(blockHeaderHex);
+    return ReverseWords(HexToBytes(blockHeaderHex));
 }
 
 void NextMiner::StratumClient::registerWorker(std::function<void(const bool)> cb) {
@@ -166,6 +167,7 @@ void NextMiner::StratumClient::registerWorker(std::function<void(const bool)> cb
 
 std::unique_ptr<NextMiner::GetWork::Work> NextMiner::StratumClient::getWork() {
     if(currentJob) {
+        currentJob->newExtranonce2();
         StratumJob* job = new StratumJob;
 
         jobLock.lock();
@@ -286,21 +288,21 @@ void NextMiner::StratumClient::responseFunction() {
                                 }
                                 callbacksLock.unlock();
 
-                                //log->printf("Stratum: mining.notify " + hexBytes,
-                                //Log::Severity::Notice);
+                                log->printf("Stratum: mining.notify " + hexBytes,
+                                Log::Severity::Notice);
                             }
                         } else if(method == "mining.set_difficulty") {
-                            //std::thread([this, res]{
+                            std::thread([this, res]{
                                 currentParams.target = DiffToCompact(
                                                        res["params"][0]
                                                        .asDouble() / 256);
 
-                                //log->printf("Stratum: mining.set_difficulty(" +
-                                            //res["params"][0].asString() +
-                                            //") nBits: " +
-                                            //std::to_string(currentParams.target),
-                                        //Log::Severity::Notice);
-                            //}).detach();
+                                log->printf("Stratum: mining.set_difficulty(" +
+                                            res["params"][0].asString() +
+                                            ") nBits: " +
+                                            std::to_string(currentParams.target),
+                                        Log::Severity::Notice);
+                            }).detach();
                         } else if(method == "mining.set_extranonce") {
                             currentParams.extranonce1 = res["params"][0]
                                                         .asString();
@@ -320,7 +322,7 @@ void NextMiner::StratumClient::responseFunction() {
 void NextMiner::StratumClient::sendResponse(const Json::Value& result,
                                             const uint64_t id,
                                             const Json::Value& error) {
-    //std::thread([=]{
+    std::thread([=]{
         Json::Value res;
 
         res["id"] = id;
@@ -329,7 +331,7 @@ void NextMiner::StratumClient::sendResponse(const Json::Value& result,
         res["error"] = error;
 
         sendJson(res);
-    //}).detach();
+    }).detach();
 }
 
 void NextMiner::StratumClient::sendJson(const Json::Value& payload) {

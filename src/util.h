@@ -53,8 +53,15 @@ T EndSwap(T u){
     return dest.u;
 }
 
-inline std::vector<uint8_t> ReverseBytes(const std::vector<uint8_t>& data) {
-    return std::vector<uint8_t>(data.rbegin(), data.rend());
+inline std::vector<uint8_t> ReverseWords(const std::vector<uint8_t>& data) {
+    std::vector<uint8_t> returning(data);
+
+    for(unsigned int i = 0; i < data.size(); i += 4) {
+        *reinterpret_cast<uint32_t*>(&returning[i]) =
+        EndSwap(*reinterpret_cast<uint32_t*>(&returning[i]));
+    }
+
+    return returning;
 }
 
 inline std::vector<uint8_t> DoubleSHA256(const std::vector<uint8_t>& data) {
