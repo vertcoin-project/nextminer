@@ -83,6 +83,12 @@
 		<Unit filename="src/Lyra2RE/sph_types.h" />
 		<Unit filename="src/bignum.hpp" />
 		<Unit filename="src/common.h" />
+		<Unit filename="src/cpumanager.cpp" />
+		<Unit filename="src/cpumanager.h" />
+		<Unit filename="src/cpuworker.cpp" />
+		<Unit filename="src/cpuworker.h" />
+		<Unit filename="src/gate.cpp" />
+		<Unit filename="src/gate.h" />
 		<Unit filename="src/getwork.h" />
 		<Unit filename="src/log.cpp" />
 		<Unit filename="src/log.h" />
@@ -94,6 +100,7 @@
 		<Unit filename="src/uint256.h" />
 		<Unit filename="src/util.h" />
 		<Unit filename="src/version.h" />
+		<Unit filename="src/workermanager.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
