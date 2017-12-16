@@ -22,7 +22,7 @@ namespace NextMiner {
                           const std::string& password,
                           Log* log);
 
-            ~StratumClient();
+            virtual ~StratumClient();
 
             class StratumJob : public Work {
                 friend class StratumClient;
