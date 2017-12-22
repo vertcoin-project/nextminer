@@ -37,13 +37,15 @@ namespace NextMiner {
 
                     virtual void operator=(const Work& other);
 
-                    virtual std::vector<uint8_t> getBytes();
+                    virtual std::vector<uint8_t> getBytes() const;
 
                     virtual void setNonce(const uint32_t nonce);
 
-                    virtual uint32_t getTarget();
+                    virtual uint32_t getTarget() const;
 
                     virtual void newExtranonce2();
+
+                    virtual std::unique_ptr<Work> clone() const;
 
                 protected:
                     std::string jobId;

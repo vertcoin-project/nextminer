@@ -118,7 +118,7 @@ void NextMiner::StratumClient::StratumJob::setNonce(const uint32_t nonce) {
     this->nonce = nonce;
 }
 
-uint32_t NextMiner::StratumClient::StratumJob::getTarget() {
+uint32_t NextMiner::StratumClient::StratumJob::getTarget() const {
     return target;
 }
 
@@ -134,7 +134,14 @@ void NextMiner::StratumClient::StratumJob::newExtranonce2() {
     extranonce2 = ss.str();
 }
 
-std::vector<uint8_t> NextMiner::StratumClient::StratumJob::getBytes() {
+std::unique_ptr<NextMiner::GetWork::Work> NextMiner::StratumClient::StratumJob::clone() const {
+    StratumJob* job = new StratumJob;
+    *job = *this;
+
+    return std::unique_ptr<NextMiner::GetWork::Work>(job);
+}
+
+std::vector<uint8_t> NextMiner::StratumClient::StratumJob::getBytes() const {
     const std::string coinbaseHex = coinb1 + extranonce1 + extranonce2 + coinb2;
 
     const auto coinbaseBytes = HexToBytes(coinbaseHex);
@@ -217,7 +224,8 @@ void NextMiner::StratumClient::suggestDifficulty(const double difficulty) {
 void NextMiner::StratumClient::responseFunction() {
     std::string leftOvers;
     while(running) {
-        std::string buffer(1024 * 20, '\0');
+        std::string buffer;
+        buffer.resize(1024 * 20);
         size_t received;
         socketLock.lock();
         if(socket.receive(&buffer[0], buffer.capacity(), received) != sf::Socket::Status::Error) {

@@ -101,6 +101,8 @@
 		<Unit filename="src/util.h" />
 		<Unit filename="src/version.h" />
 		<Unit filename="src/workermanager.h" />
+		<Unit filename="src/workproxy.cpp" />
+		<Unit filename="src/workproxy.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

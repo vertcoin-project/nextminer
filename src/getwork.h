@@ -17,13 +17,15 @@ namespace NextMiner {
 
                     virtual void operator=(const Work& other) {};
 
-                    virtual std::vector<uint8_t> getBytes() = 0;
+                    virtual std::vector<uint8_t> getBytes() const = 0;
 
                     virtual void setNonce(const uint32_t nonce) = 0;
 
-                    virtual uint32_t getTarget() = 0;
+                    virtual uint32_t getTarget() const = 0;
 
                     virtual void newExtranonce2() = 0;
+
+                    virtual std::unique_ptr<Work> clone() const = 0;
             };
 
             virtual void registerWorker(std::function<void(const bool)> cb) = 0;
