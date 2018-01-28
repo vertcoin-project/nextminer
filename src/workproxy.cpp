@@ -57,7 +57,7 @@ std::unique_ptr<NextMiner::GetWork::Work> NextMiner::WorkProxy::getWork() {
 std::tuple<bool, std::string> NextMiner::WorkProxy::submitWork(const NextMiner::GetWork::Work& work) {
     const auto& proxyJob = dynamic_cast<const ProxyJob&>(work);
 
-    return proxyJob.workSource->submitWork(work);
+    return proxyJob.workSource->submitWork(*proxyJob.work);
 }
 
 void NextMiner::WorkProxy::suggestDifficulty(const double difficulty) {
