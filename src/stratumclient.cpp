@@ -12,6 +12,7 @@
 #include "version.h"
 #include "log.h"
 #include "util.h"
+#include "Lyra2RE/Lyra2RE.h"
 
 NextMiner::StratumClient::StratumClient(const std::string& host,
                                         const unsigned int port,
@@ -189,6 +190,28 @@ std::unique_ptr<NextMiner::GetWork::Work> NextMiner::StratumClient::getWork() {
 
 std::tuple<bool, std::string> NextMiner::StratumClient::submitWork(const NextMiner::GetWork::Work& work) {
     const StratumJob& job = dynamic_cast<const StratumJob&>(work);
+
+    // TODO: move this validation code to the GPU manager code
+    // StratumClient should be PoW-agnostic
+    std::vector<uint8_t> outputBuffer;
+    outputBuffer.resize(32);
+
+    const uint64_t target = EndSwap(*reinterpret_cast<uint64_t*>(&HexToBytes(CompactToTarget(work.getTarget()).ToString())[0]));
+    auto headerBytes = work.getBytes();
+
+    *reinterpret_cast<uint32_t*>(&headerBytes[76]) = EndSwap(job.nonce);
+
+    lyra2re2_hash(reinterpret_cast<const char*>(&headerBytes[0]),
+                  reinterpret_cast<char*>(&outputBuffer[0]));
+
+    const uint64_t result = *reinterpret_cast<uint64_t*>(&outputBuffer[24]);
+
+    if(result > target) {
+        return std::make_tuple(false, "Ignoring job with hash > target hash: " +
+                                      std::to_string(result) + " target: " +
+                                      std::to_string(target) + " nonce: " +
+                                      std::to_string(job.nonce));
+    }
 
     Json::Value params;
     params.append(username);
