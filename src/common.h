@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#include "compat/endian.h"
+
 uint16_t static inline ReadLE16(const unsigned char* ptr)
 {
     return le16toh(*((uint16_t*)ptr));
