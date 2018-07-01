@@ -1,9 +1,3 @@
-#ifdef __linux
-#include <pthread.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#endif // __linux
-
 #include "Lyra2RE/Lyra2RE.h"
 
 #include "util.h"
@@ -32,20 +26,6 @@ int main() {
         new NextMiner::WorkProxy(workSource1.get(), 10));
 
     workProxy->addWorkSource(workSource2.get(), 10);
-
-    #ifdef __linux
-    if(setpriority(PRIO_PROCESS, 0, -15) == -1) {
-        log->printf("Failed to set process priority",
-                    NextMiner::Log::Severity::Warning);
-    }
-    cpu_set_t cpuset;
-    CPU_ZERO(&cpuset);
-    CPU_SET(0, &cpuset);
-    if(sched_setaffinity(0, sizeof(&cpuset), &cpuset) == -1) {
-        log->printf("Failed to set process affinity",
-                    NextMiner::Log::Severity::Warning);
-    }
-    #endif // __linux
 
     std::unique_ptr<NextMiner::CPUManager> CPU(
         new NextMiner::CPUManager(workProxy.get(), log.get()));
