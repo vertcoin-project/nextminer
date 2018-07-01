@@ -36,6 +36,7 @@
 			<Add option="-Wextra" />
 			<Add option="-Wall" />
 			<Add option="-std=c++14" />
+			<Add directory="/usr/local/include" />
 		</Compiler>
 		<Linker>
 			<Add option="-ljsoncpp" />
@@ -93,6 +94,8 @@
 		<Unit filename="src/log.cpp" />
 		<Unit filename="src/log.h" />
 		<Unit filename="src/main.cpp" />
+		<Unit filename="src/regtest.cpp" />
+		<Unit filename="src/regtest.h" />
 		<Unit filename="src/sha256.cpp" />
 		<Unit filename="src/sha256.h" />
 		<Unit filename="src/stratumclient.cpp" />

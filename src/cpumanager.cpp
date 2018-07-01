@@ -46,7 +46,7 @@ NextMiner::CPUManager::CPUManager(NextMiner::GetWork* workSource, NextMiner::Log
 
             const uint32_t workSize = 50000;
 
-            for(uint32_t i = 0; i < (2^32) - 1 && !stale; i += workSize) {
+            for(uint32_t i = 0; i < std::numeric_limits<uint32_t>::max() && !stale; i += workSize) {
                 const auto res = workers[0]->scanHash(headerBytes, i, i + workSize, target);
                 if(!res.empty()) {
                     for(const auto solution : res) {
