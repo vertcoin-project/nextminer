@@ -1,0 +1,6 @@
+# The ".gitattributes" file
+
+###############################################################################
+# Set default behavior to automatically normalize line endings.
+###############################################################################
+* text=auto
