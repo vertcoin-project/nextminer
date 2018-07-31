@@ -1,0 +1,39 @@
+# Travis CI (https://travis-ci.org/vertcoin-project/nextminer)
+
+## This project is written mostly in C
+language: c
+
+## No admin rights required
+sudo: false
+
+## Set environment variables for Travis CI
+env:
+  global:
+    - LUAROCKS=2.3.0
+  matrix:
+    - LUA=lua5.1
+    - LUA=lua5.2
+    - LUA=lua5.3
+    - LUA=luajit     # latest stable version (2.0.4)
+    - LUA=luajit2.0  # current head of 2.0 branch
+    - LUA=luajit2.1  # current head of 2.1 branch
+
+## Trigger Travis CI builds only from specific branches
+branches:
+  only:
+    - master
+
+## Pre-build commands
+before_install:
+  - source .travis/setenv_lua.sh
+
+## Script commands
+script:
+  - premake5 gmake2
+  - make
+
+## Notification settings
+notifications:
+  email:
+    on_success: change
+    on_failure: change
